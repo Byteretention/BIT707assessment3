@@ -1,0 +1,9 @@
+<#if licenseFirst??>
+${licenseFirst}
+</#if>
+${licensePrefix}BIT707
+${licensePrefix}Assessment 3
+${licensePrefix}Student ID: 5032962
+<#if licenseLast??>
+${licenseLast}
+</#if>
