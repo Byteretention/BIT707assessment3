@@ -40,15 +40,15 @@ public class Task {
     //setters
     //status
     public void setCompletion(boolean statustobe){
-        
+        this.Status = statustobe;
     }
     //task desc
     public void setDesc(String desc){
-        
+        this.TaskDesc = desc;
     }
     //Due Date
     public void setDueDate(LocalDate date){
-        
+        this.DueDate = date;
     }
     
     

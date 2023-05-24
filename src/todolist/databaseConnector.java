@@ -6,6 +6,8 @@
 package todolist;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
         
 /**
  *
@@ -13,14 +15,21 @@ import java.sql.*;
  */
 public class databaseConnector {
     
+    String ConnectionURL;
+    
+    
+    public databaseConnector(String url){ 
+        this.ConnectionURL = url;
+    }
+    
     /**
      * Create a connection to the Database. using the input string as the path
      * @return connection, if null no connection was made
      */
-    private Connection connect(String url) {
+    private Connection connect() {
         
         //create the sql connection screen taking in the path provided
-        url = "jdbc:sqlite:" + url;
+        String url = "jdbc:sqlite:" + ConnectionURL;
         //create the connection we will return
         Connection conn = null;
         
@@ -28,86 +37,90 @@ public class databaseConnector {
         try {
             conn = DriverManager.getConnection(url);
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            throw new IllegalArgumentException("Url not correct");
         }
-        
-        //return conn.
+       
         return conn;
     }
-        
-    /**
-     * select all and print all rows in task table
-     */
-    public void printAllFromTask(String url){
-        
-        //the sql querry we will send to the databse
-        String sqlQuery = "SELECT taskNumber, taskName FROM Task";
-        
-        //try to connect to the database using the url given
-        //if we connect use the connection to create a sqlquerry given earlyer
-        //then loop though the result and print all the rows in the database
-        // if failed print why
-        try (Connection conn = this.connect(url);
-             Statement stmt  = conn.createStatement();
-             ResultSet rs    = stmt.executeQuery(sqlQuery)){
-            
-            // loop through the result set
-            while (rs.next()) {
-                System.out.println(rs.getInt("taskNumber") +  "\t" + 
-                                   rs.getString("taskName"));
-            }
+    
+    public void testConnect(){
+        try{
+            Connection conn = this.connect();
+            String sqlQuery = "SELECT taskNumber FROM Task";
+            Statement stmt  = conn.createStatement();
+            ResultSet rs    = stmt.executeQuery(sqlQuery);
+            conn.close();
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            throw new IllegalArgumentException("Url not correct");
         }
     }
-    
-    
-    //testing functions
-    
-    //print only tasknumberfrom database
-    public void printTaskNumber(){
-                
-        //the sql querry we will send to the databse
-        String sqlQuery = "SELECT taskNumber FROM Task";
         
-        //try to connect to the database using the url given
-        //if we connect use the connection to create a sqlquerry given earlyer
-        //then loop though the result and print all the rows in the database
-        // if failed print why
-        try (Connection conn = this.connect("C://sqlite/db/ToDo.db");
-             Statement stmt  = conn.createStatement();
-             ResultSet rs    = stmt.executeQuery(sqlQuery)){
-            
-            // loop through the result set
-            while (rs.next()) {
-                System.out.println(rs.getInt("taskNumber"));
-            }
-        } catch (SQLException e) {
+    public void updateTask(int taskID, String date, int ownerID, int taskStatus, String taskDesc)
+    {
+        String sqlQuery = "UPDATE Task SET dueDate = ?, ownderID = ?, taskStatus = ?, taskDesc = ? WHERE taskNumber = ?";
+        
+        try 
+        {
+            Connection conn = this.connect();
+            PreparedStatement stmt = conn.prepareStatement(sqlQuery);
+            stmt.setString(1,date);
+            stmt.setInt(2, ownerID);
+            stmt.setInt(3, taskStatus);
+            stmt.setString(4,taskDesc);
+            stmt.setInt(5, taskID);
+            stmt.executeUpdate();
+            conn.close();
+        }catch (SQLException e){
             System.out.println(e.getMessage());
-        }
+        }     
     }
     
-    //print only tasknumberfrom database
-    public void printTaskName(){
-                
-        //the sql querry we will send to the databse
-        String sqlQuery = "SELECT taskName FROM Task";
+    public Task getTask(int taskID){
         
-        //try to connect to the database using the url given
-        //if we connect use the connection to create a sqlquerry given earlyer
-        //then loop though the result and print all the rows in the database
-        // if failed print why
-        try (Connection conn = this.connect("C://sqlite/db/ToDo.db");
-             Statement stmt  = conn.createStatement();
-             ResultSet rs    = stmt.executeQuery(sqlQuery)){
+        String sqlQuery = "SELECT taskNumber, dueDate, ownderID, taskStatus, taskName, taskDesc From Task Where taskNumber = " + Integer.toString(taskID);
+        
+        //task details to be filled
+        int expectedid = taskID;
+        String expectedTitle = "";
+        LocalDate expectedDate = null;
+        int expectedownerid = 0;
+        String expectedDesc= "";
+        boolean expectedstatus = false;
+        //formatter to make the string for date back into LocalDate
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
+        
+        
+        try 
+        {
+            Connection conn = this.connect();
+            Statement stmt = conn.createStatement();
+            ResultSet rs    = stmt.executeQuery(sqlQuery);
             
-            // loop through the result set
-            while (rs.next()) {
-                System.out.println(rs.getString("taskName"));
+            while (rs.next()){
+                    expectedDate = LocalDate.parse(rs.getString("dueDate"), formatter);
+                    expectedownerid = rs.getInt("ownderID");
+                    if (rs.getInt("taskStatus") == 1){
+                       expectedstatus = true; 
+                    }
+                    expectedTitle = rs.getString("taskName");
+                    expectedDesc = rs.getString("taskDesc");
             }
-        } catch (SQLException e) {
+            
+            conn.close();
+            
+        }catch (SQLException e){
             System.out.println(e.getMessage());
-        }
+        } 
+        
+        Task output = new Task(
+            expectedid, 
+            expectedTitle, 
+            expectedDate,
+            expectedownerid, 
+            expectedDesc );
+        output.setCompletion(expectedstatus);
+        
+        return output;
     }
     
     
@@ -118,7 +131,7 @@ public class databaseConnector {
         String sqlQuery = "SELECT MAX(taskNumber) FROM Task";
                 
         //try connect to the database
-        try (Connection conn = this.connect("C://sqlite/db/ToDo.db");
+        try (Connection conn = this.connect();
              Statement stmt  = conn.createStatement();
              ResultSet rs    = stmt.executeQuery(sqlQuery)){
             
