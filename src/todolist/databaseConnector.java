@@ -203,6 +203,25 @@ public class databaseConnector {
         
     }
     
+    //remove a entry from the Db
+    public void removeItem(int TaskID){
+     
+        //our Query
+        String sqlQuery = "DELETE FROM task WHERE taskNumber = ?";
+        
+        //try connect to the database
+        try {
+            Connection conn = this.connect();
+            PreparedStatement stmt = conn.prepareStatement(sqlQuery);
+            stmt.setInt(1,TaskID);
+            stmt.executeUpdate();
+            conn.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
+    }
+    
     
     //get next id from sql database. we will use this to create ids in task objects
     public int getNextID(){
@@ -219,9 +238,38 @@ public class databaseConnector {
             return rs.next() ? rs.getInt(1) +1 : 1;
 
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            throw new IllegalArgumentException("Does not Exist");
         }
         //if we get -1 we failed somwhere down the line.
-        return -1;
+    }
+    
+    
+    
+    
+    //this only exists to allow for testing
+    public void createtask4(){
+        LocalDate date = LocalDate.now();
+        //create a formater to convert date time to string
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
+        String formattedDate = date.format(formatter);
+        //our Query
+        String sqlQuery = "INSERT INTO Task "+
+                "VALUES (" +
+                4 + ", " +
+                "'" + formattedDate + "', " +
+                111 + ", " +
+                0 + ", " +
+                "'" + "to be removed" + "', " +
+                "'" + "aaaaaaaaaaa" + "')"
+                ;
+        try{
+            Connection conn = this.connect();
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sqlQuery);
+            conn.close();
+        }catch(SQLException e){
+            throw new IllegalArgumentException("Url not correct");
+        }
+        
     }
 }

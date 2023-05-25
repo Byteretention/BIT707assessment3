@@ -245,50 +245,31 @@ public class ToDoControllerTest {
         System.out.println("---");
         
     }
-
+    
     @Test
-    public void testUpdateTaskCompletion() {
-        System.out.println("updateTaskCompletion");
-        int taskID = 0;
-        boolean newstatus = false;
-        ToDoController instance = new ToDoController();
-        boolean expResult = false;
-        boolean result = instance.updateTaskCompletion(taskID, newstatus);
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
-    }
+    public void testRemoveTask() {
+        System.out.println("Test Remove Task\n~~");
 
-    @Test
-    public void testToggleTaskCompletion() {
-        System.out.println("toggleTaskCompletion");
-        int taskID = 0;
-        ToDoController instance = new ToDoController();
-        boolean expResult = false;
-        boolean result = instance.toggleTaskCompletion(taskID);
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
-    }
-
-    @Test
-    public void testUpdateTaskDesc() {
-        System.out.println("updateTaskDesc");
-        int taskID = 0;
-        String newdesc = "";
-        ToDoController instance = new ToDoController();
-        boolean expResult = false;
-        boolean result = instance.updateTaskDesc(taskID, newdesc);
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
-    }
-
-    @Test
-    public void testUpdateDueDate() {
-        System.out.println("updateDueDate");
-        LocalDate newdate = null;
-        ToDoController instance = new ToDoController();
-        boolean expResult = false;
-        boolean result = instance.updateDueDate(newdate);
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
+        ToDoController test = new ToDoController();
+        try{
+            test.connect(url, 0);
+        } catch (Exception e){
+            System.out.println("Failed to connect to : " + url);
+            fail("URL: " + url + "\nNo database exists at this address");
+        }
+        //create task 4
+        test.createtask4();
+        
+        //get task ID 4
+        Task output = test.getTask( 4);    
+        System.out.println("" + 
+            output.getID() + " " + 
+            output.getTitle() + " " + 
+            output.getDueDate() + " " + 
+            output.getCompletion() + " " + 
+            output.getOwnerId() + " " + 
+            output.getDesc()
+        );
+        //for this test we need to check the DB if task 4 exists. if it does not. we passed
     }
 }

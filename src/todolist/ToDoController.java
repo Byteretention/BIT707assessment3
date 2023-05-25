@@ -55,7 +55,6 @@ public class ToDoController {
         return connection.getTask(taskid);
     }
 
-
     //update single task
     public void updateTask(Task input) {
         //get task id
@@ -80,50 +79,44 @@ public class ToDoController {
                 status,
                 taskDescipt);
     }
-    
+
     //for create Task to work we need to get a ID from the database
-    private int getNextID(){
-        return connection.getNextID();       
+    private int getNextID() {
+        return connection.getNextID();
     }
 
     //controller. remember to update the sql database.
     //make sure that title is not null
     public int createTask(LocalDate date, int owner, String title, String desc) {
         //chcek if a name is null. if it is return -1 and make the ui error out
-        if (title == ""){return -1;}
-        
+        if (title == "") {
+            return -1;
+        }
+
         //get the ID for the next Task. if negative 1 error out. return -2
         int TaskID = this.getNextID();
-        if(TaskID == -1){return -2;}
-        
+        if (TaskID == -1) {
+            return -2;
+        }
+
         //create the task
         connection.insertTask(TaskID, title, date, owner, desc);
         return TaskID;
     }
 
-    //update tasks
-    //completion
-    public boolean updateTaskCompletion(int taskID, boolean newstatus) {
+    public void removeTask(int taskID) {
+        try {
+            connection.removeItem(taskID);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        }
 
-        return false;
     }
-
-    //toggle completion
-    public boolean toggleTaskCompletion(int taskID) {
-
-        return false;
-    }
-
-    //desc
-    public boolean updateTaskDesc(int taskID, String newdesc) {
-
-        return false;
-    }
-
-    //Date
-    public boolean updateDueDate(LocalDate newdate) {
-
-        return false;
+    
+    
+    //for testing create task 4.
+    public void createtask4() {
+        connection.createtask4();
     }
 
 }
