@@ -81,9 +81,9 @@ public class databaseConnector {
         }     
     }
     
-    public Task getTask(int taskID){
+    public Task getTask(int taskID, int OwnerID){
         
-        String sqlQuery = "SELECT taskNumber, dueDate, ownderID, taskStatus, taskName, taskDesc From Task Where taskNumber = " + Integer.toString(taskID);
+        String sqlQuery = "SELECT taskNumber, dueDate, ownderID, taskStatus, taskName, taskDesc From Task Where taskNumber = ? AND ?";
         
         //task details to be filled
         int expectedid = taskID;
@@ -99,8 +99,10 @@ public class databaseConnector {
         try 
         {
             Connection conn = this.connect();
-            Statement stmt = conn.createStatement();
-            ResultSet rs    = stmt.executeQuery(sqlQuery);
+            PreparedStatement stmt = conn.prepareStatement(sqlQuery);
+            stmt.setInt(1, taskID);
+            stmt.setInt(2, OwnerID);
+            ResultSet rs    = stmt.executeQuery();
             
             while (rs.next()){
                     expectedDate = LocalDate.parse(rs.getString("dueDate"), formatter);
@@ -130,11 +132,11 @@ public class databaseConnector {
     }
     
     //get all tasks from the database
-    public List<Task> getAllTasks(){
+    public List<Task> getAllTasks(int OwnerID){
         
         List<Task> tasks = new ArrayList<Task>();
         
-        String sqlQuery = "SELECT taskNumber, dueDate, ownderID, taskStatus, taskName, taskDesc From Task";
+        String sqlQuery = "SELECT taskNumber, dueDate, ownderID, taskStatus, taskName, taskDesc From Task WHERE ownderID = " + Integer.toString(OwnerID);
         //formatter to make the string for date back into LocalDate
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
         //try to connect to db and get list of tasks
@@ -268,7 +270,8 @@ public class databaseConnector {
             stmt.executeUpdate(sqlQuery);
             conn.close();
         }catch(SQLException e){
-            throw new IllegalArgumentException("Url not correct");
+            System.out.println(e.getMessage());
+            throw new IllegalArgumentException(e.getMessage());
         }
         
     }

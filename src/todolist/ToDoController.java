@@ -45,14 +45,14 @@ public class ToDoController {
     }
 
     //get all tasks
-    public List<Task> getallTasks() {
+    public List<Task> getallTasks(int OwnerID) {
         //we can also use this to update the intrunal list of tasks
-        this.Tasks = connection.getAllTasks();
+        this.Tasks = connection.getAllTasks(OwnerID);
         return Tasks;
     }
 
-    public Task getTask(int taskid) {
-        return connection.getTask(taskid);
+    public Task getTask(int taskid, int OwnerID) {
+        return connection.getTask(taskid, OwnerID );
     }
 
     //update single task

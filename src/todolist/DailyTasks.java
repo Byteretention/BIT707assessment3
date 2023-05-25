@@ -79,7 +79,8 @@ public class DailyTasks extends javax.swing.JFrame {
         CalanderView = new JPanel();
         
         //update buttons
-        updatebuttons();
+        AddTasksToDaily();
+        //AddTasksToCalander();
         
         //set up a scroll plane for the buttons
 
@@ -146,11 +147,11 @@ public class DailyTasks extends javax.swing.JFrame {
     
     
     
-    private void updatebuttons(){
+    private void AddTasksToDaily(){
                 
         //make a list of all tasks
         //make a list of buttons to assing later
-        tasks = control.getallTasks();
+        tasks = control.getallTasks(1);
         
         //formatter for date strings
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
