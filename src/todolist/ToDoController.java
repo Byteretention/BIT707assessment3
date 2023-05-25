@@ -5,7 +5,6 @@
  */
 package todolist;
 
-
 //imports
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -17,132 +16,114 @@ import java.util.List;
  * @author Tarrynt Whitty
  */
 public class ToDoController {
-    
+
     int LoggedOwnerID;
     List<Task> Tasks;
     databaseConnector connection;
-    
-    
-    public ToDoController(){
-        
+
+    public ToDoController() {
+
     }
-    
+
+    //the ui should ask the user how many days from now they wish to have the due date
+    public LocalDate GetTimeFromNow(int days) {
+        LocalDate today = LocalDate.now();
+        LocalDate tomorrow = today.plusDays(days);
+        return tomorrow;
+    }
+
     //interface with SQL database
-    
     //connect to database
-    public void connectToDB(String URL, int userID){
+    public void connect(String URL, int userID) {
         connection = new databaseConnector(URL);
-        try{           
+        try {
             connection.testConnect();
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             throw e;
         }
-        this.LoggedOwnerID = userID;  
+        this.LoggedOwnerID = userID;
     }
-    
+
     //get all tasks
-    public List<Task> getTasksfromDB(){  
+    public List<Task> getallTasks() {
         //we can also use this to update the intrunal list of tasks
         this.Tasks = connection.getAllTasks();
         return Tasks;
     }
-    
-        
-    public Task getTaskfromDB(int taskid){      
-        return connection.getTask(taskid); 
+
+    public Task getTask(int taskid) {
+        return connection.getTask(taskid);
     }
-    
-    //Update list of tasks owned by persons
-    public boolean updateTaskstoDB(){
-        
-        return false;
-    }
-    
+
+
     //update single task
-    public void updateTasktoDB(Task input){
+    public void updateTask(Task input) {
         //get task id
         int taskid = input.getID();
-        //create a formater to convert date time to string
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
-        String formattedDate = input.getDueDate().format(formatter);
+        //get Date
+        LocalDate date = input.getDueDate();
         //get ownerID
         int ownerid = input.getOwnerId();
         //get status, if true set it to 1, if false set it to 0
         int status = 0;
-        if(input.getCompletion()){
+        if (input.getCompletion()) {
             status = 1;
         }
         //get task descipt
         String taskDescipt = input.getDesc();
-        
+
         //update the task
         connection.updateTask(
                 taskid,
-                formattedDate,
+                date,
                 ownerid,
                 status,
                 taskDescipt);
     }
     
-    //the ui should ask the user how many days from now they wish to have the due date
-    public LocalDate GetTimeFromNow(int days)
-    {
-        //LocalDate today = LocalDate.now();
-	//LocalDate tomorrow = today.plusDays(1);
-        //return now to allow for building.
-        return LocalDate.now();
-    } 
-    
+    //for create Task to work we need to get a ID from the database
+    private int getNextID(){
+        return connection.getNextID();       
+    }
+
     //controller. remember to update the sql database.
     //make sure that title is not null
-    public void createTask(LocalDate date, int owner, String title, String desc)
-    {
+    public int createTask(LocalDate date, int owner, String title, String desc) {
+        //chcek if a name is null. if it is return -1 and make the ui error out
+        if (title == ""){return -1;}
         
+        //get the ID for the next Task. if negative 1 error out. return -2
+        int TaskID = this.getNextID();
+        if(TaskID == -1){return -2;}
+        
+        //create the task
+        connection.insertTask(TaskID, title, date, owner, desc);
+        return TaskID;
     }
-    //Effectively just a wrapper for accessing the database.
-    public List<Task> getAllTasks(){ 
-        return this.getTasksfromDB();
-    }
-    //Effectlyive just a wapper for accessing the database
-    public Task getTaskByID(int taskID){
-        return this.getTaskfromDB(taskID);
-    }
-    
+
     //update tasks
     //completion
-    public boolean updateTaskCompletion(int taskID, boolean newstatus){
-        
+    public boolean updateTaskCompletion(int taskID, boolean newstatus) {
+
         return false;
     }
+
     //toggle completion
-    public boolean toggleTaskCompletion(int taskID){
-        
+    public boolean toggleTaskCompletion(int taskID) {
+
         return false;
     }
-    
+
     //desc
-    public boolean updateTaskDesc(int taskID, String newdesc){
-        
+    public boolean updateTaskDesc(int taskID, String newdesc) {
+
         return false;
     }
-    
+
     //Date
-    public boolean updateDueDate(LocalDate newdate){
-        
+    public boolean updateDueDate(LocalDate newdate) {
+
         return false;
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
 }

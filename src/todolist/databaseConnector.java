@@ -57,15 +57,19 @@ public class databaseConnector {
         }
     }
         
-    public void updateTask(int taskID, String date, int ownerID, int taskStatus, String taskDesc)
+    public void updateTask(int taskID, LocalDate date, int ownerID, int taskStatus, String taskDesc)
     {
+        //create a formater to convert date time to string
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
+        String formattedDate = date.format(formatter);
+        
         String sqlQuery = "UPDATE Task SET dueDate = ?, ownderID = ?, taskStatus = ?, taskDesc = ? WHERE taskNumber = ?";
         
         try 
         {
             Connection conn = this.connect();
             PreparedStatement stmt = conn.prepareStatement(sqlQuery);
-            stmt.setString(1,date);
+            stmt.setString(1,formattedDate);
             stmt.setInt(2, ownerID);
             stmt.setInt(3, taskStatus);
             stmt.setString(4,taskDesc);
@@ -111,7 +115,7 @@ public class databaseConnector {
             conn.close();
             
         }catch (SQLException e){
-            System.out.println(e.getMessage());
+            throw new IllegalArgumentException("Url not correct");
         } 
         
         Task output = new Task(
@@ -163,11 +167,40 @@ public class databaseConnector {
             conn.close();
             
         }catch (SQLException e){
-            System.out.println(e.getMessage());
+            throw new IllegalArgumentException("Url not correct");
         } 
         
         
         return tasks;
+    }
+    
+    public void insertTask( int TaskID, String title, LocalDate date, int owner, String desc)
+    {
+        //create a formater to convert date time to string
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
+        String formattedDate = date.format(formatter);
+        
+        
+        
+        //our Query
+        String sqlQuery = "INSERT INTO Task "+
+                "VALUES (" +
+                TaskID + ", " +
+                "'" + formattedDate + "', " +
+                owner + ", " +
+                0 + ", " +
+                "'" + title + "', " +
+                "'" + desc + "')"
+                ;
+        try{
+            Connection conn = this.connect();
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sqlQuery);
+            conn.close();
+        }catch(SQLException e){
+            throw new IllegalArgumentException("Url not correct");
+        }
+        
     }
     
     
