@@ -20,7 +20,8 @@ public class TodoList {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        testingDates();
+        DailyTasks day = new DailyTasks();
+        day.setVisible(true);
     }
     
     
