@@ -38,7 +38,7 @@ public class ToDoControllerTest {
         //create Database controller
         ToDoController test = new ToDoController();
         
-        
+        System.out.println("Attemping to connect to:" + url);
         try{
             test.connectToDB(url, 0);
         } catch (Exception e){
@@ -48,11 +48,10 @@ public class ToDoControllerTest {
         System.out.println("Connected.\nPass\n---");
         assertTrue( true);
     }
-
+    
     @Test
-    public void testUpdateTasks() {
-        //System.out.println("Testing updateTasks\n~~");
-                
+    public void testGetTaskfromDB() {
+        System.out.println("testing getTaskfromDB\n~~");
         //create Database controller
         ToDoController test = new ToDoController();
         try{
@@ -61,10 +60,44 @@ public class ToDoControllerTest {
             System.out.println("Failed to connect to : " + url);
             fail("URL: " + url + "\nNo database exists at this address");
         }
+        
+        List<Task> tasks = test.getTasksfromDB();
+        
+        for (Task item : tasks){
+            System.out.println("" + 
+                item.getID() + " " + 
+                item.getTitle() + " " + 
+                item.getDueDate() + " " + 
+                item.getCompletion() + " " + 
+                item.getOwnerId() + " " + 
+                item.getDesc()
+                );
+        }
+        
+        if (tasks == null){
+            fail("tasks returned null");
+        }
+        
+        System.out.println("---");
     }
+    
+    
+    
+    @Test
+    public void testUpdateTaskstoDB() {
+        System.out.println("updateTaskstoDB");
+        ToDoController instance = new ToDoController();
+        boolean expResult = false;
+        boolean result = instance.updateTaskstoDB();
+        assertEquals(expResult, result);
+        fail("The test case is a prototype.");
+    }
+    
+    
+
 
     @Test
-    public void testUpdateTask() {
+    public void testUpdateTasktoDB() {
         System.out.println("Testing updateTasks\n~~");
         
         //create Database controller
@@ -107,7 +140,7 @@ public class ToDoControllerTest {
         
         
         //output from database
-        Task output = test.getTaskfromDB();        
+        Task output = test.getTaskfromDB( 1);        
         System.out.println("" + 
                 output.getID() + " " + 
                 output.getTitle() + " " + 
@@ -126,8 +159,9 @@ public class ToDoControllerTest {
         
         System.out.println("---");
         
-    }
 
+    }
+    
     @Test
     public void testGetTimeFromNow() {
         //System.out.println("GetTimeFromNow");
@@ -153,12 +187,34 @@ public class ToDoControllerTest {
 
     @Test
     public void testGetAllTasks() {
-        //System.out.println("getAllTasks");
-        ToDoController instance = new ToDoController();
-        List<Task> expResult = null;
-        List<Task> result = instance.getAllTasks();
-        assertEquals(expResult, result);
-        fail("The test case is a prototype.");
+        System.out.println("Test getAllTasks");
+        //create Database controller
+        ToDoController test = new ToDoController();
+        try{
+            test.connectToDB(url, 0);
+        } catch (Exception e){
+            System.out.println("Failed to connect to : " + url);
+            fail("URL: " + url + "\nNo database exists at this address");
+        }
+        
+        List<Task> tasks = test.getTasksfromDB();
+        
+        for (Task item : tasks){
+            System.out.println("" + 
+                item.getID() + " " + 
+                item.getTitle() + " " + 
+                item.getDueDate() + " " + 
+                item.getCompletion() + " " + 
+                item.getOwnerId() + " " + 
+                item.getDesc()
+                );
+        }
+        
+        if (tasks == null){
+            fail("tasks returned null");
+        }
+        
+        System.out.println("---");
     }
 
     @Test
@@ -217,5 +273,7 @@ public class ToDoControllerTest {
         assertEquals(expResult, result);
         fail("The test case is a prototype.");
     }
+
+
     
 }

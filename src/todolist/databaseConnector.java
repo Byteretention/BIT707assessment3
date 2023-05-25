@@ -8,6 +8,8 @@ package todolist;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
         
 /**
  *
@@ -121,6 +123,51 @@ public class databaseConnector {
         output.setCompletion(expectedstatus);
         
         return output;
+    }
+    
+    //get all tasks from the database
+    public List<Task> getAllTasks(){
+        
+        List<Task> tasks = new ArrayList<Task>();
+        
+        String sqlQuery = "SELECT taskNumber, dueDate, ownderID, taskStatus, taskName, taskDesc From Task";
+        //formatter to make the string for date back into LocalDate
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
+        //try to connect to db and get list of tasks
+        try 
+        {
+            Connection conn = this.connect();
+            Statement stmt = conn.createStatement();
+            ResultSet rs    = stmt.executeQuery(sqlQuery);
+            
+            while (rs.next()){
+                //build task based off what sql database gives us
+                Task item = new Task(
+                    rs.getInt("taskNumber"),
+                    rs.getString("taskName"),
+                    LocalDate.parse(rs.getString("dueDate"), formatter),
+                    rs.getInt("ownderID"),
+                    rs.getString("taskDesc")
+                );
+                //make sure completetion is correct
+                boolean status = false;
+                if (rs.getInt("taskStatus") == 1){
+                       status = true; 
+                    }
+                item.setCompletion(true);
+                
+                //add the item to the list
+                tasks.add(item);
+            }
+            
+            conn.close();
+            
+        }catch (SQLException e){
+            System.out.println(e.getMessage());
+        } 
+        
+        
+        return tasks;
     }
     
     

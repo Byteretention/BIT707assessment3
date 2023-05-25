@@ -9,6 +9,7 @@ package todolist;
 //imports
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,20 +40,26 @@ public class ToDoController {
         this.LoggedOwnerID = userID;  
     }
     
+    //get all tasks
+    public List<Task> getTasksfromDB(){  
+        //we can also use this to update the intrunal list of tasks
+        this.Tasks = connection.getAllTasks();
+        return Tasks;
+    }
+    
+        
+    public Task getTaskfromDB(int taskid){      
+        return connection.getTask(taskid); 
+    }
+    
     //Update list of tasks owned by persons
     public boolean updateTaskstoDB(){
         
         return false;
     }
     
-    public Task getTaskfromDB(){
-        
-        Task output = connection.getTask(1);        
-        return output;
-    }
-    
     //update single task
-    public boolean updateTasktoDB(Task input){
+    public void updateTasktoDB(Task input){
         //get task id
         int taskid = input.getID();
         //create a formater to convert date time to string
@@ -75,7 +82,6 @@ public class ToDoController {
                 ownerid,
                 status,
                 taskDescipt);
-        return false;
     }
     
     //the ui should ask the user how many days from now they wish to have the due date
@@ -93,14 +99,13 @@ public class ToDoController {
     {
         
     }
-    
-    public List<Task> getAllTasks(){
-        
-        return null;
+    //Effectively just a wrapper for accessing the database.
+    public List<Task> getAllTasks(){ 
+        return this.getTasksfromDB();
     }
-    
+    //Effectlyive just a wapper for accessing the database
     public Task getTaskByID(int taskID){
-        return null;
+        return this.getTaskfromDB(taskID);
     }
     
     //update tasks
