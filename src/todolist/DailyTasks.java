@@ -8,6 +8,7 @@ package todolist;
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javax.swing.JButton;
@@ -23,7 +24,7 @@ public class DailyTasks extends javax.swing.JFrame {
     ToDoController control;
     List<Task> tasks;
     String url = "C://sqlite/db/ToDo.db";
-    
+
     //window style settings.
     //size
     int WIDTH = 415;
@@ -31,16 +32,14 @@ public class DailyTasks extends javax.swing.JFrame {
     //Colors of objects
     String MAINBGCOLOR = "#FFFFFF";
     String BUTTONCOLOR = "#EEEEEE";
-    
-    
-    int numberoftasks;
-    
-    
-    
+    String HEADERCOLOR = "#4527A0";
+
+    int NumberoftodayTasks;
+
     //our Panels for this screen
     JPanel DailyTaskPanel;
     JPanel CalanderView;
-    
+
     /**
      * Creates new form DailyTasks
      */
@@ -62,126 +61,149 @@ public class DailyTasks extends javax.swing.JFrame {
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(DailyTasks.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        
-        initComponents();  
-        
-        
+
+        initComponents();
+
         //create controller and connect to database
         control = new ToDoController();
-        try{
+        try {
             control.connect(url, 0);
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Failed to connect to : " + url);
         }
-        
+
         //crate our panels
         DailyTaskPanel = new JPanel();
         CalanderView = new JPanel();
-        
+
         //update buttons
         AddTasksToDaily();
-        //AddTasksToCalander();
-        
-        //set up a scroll plane for the buttons
+        AddTasksToCalander();
 
-        
+        //set up a scroll plane for the buttons
         //set the layout for the daily panel
-        DailyTaskPanel.setLayout(new GridLayout(numberoftasks,1));
-        
+        DailyTaskPanel.setLayout(new GridLayout(NumberoftodayTasks, 1));
         DailyTaskPanel.setBackground(Color.decode(MAINBGCOLOR));
         JScrollPane DailyScrollPlan = new JScrollPane(DailyTaskPanel);
         DailyScrollPlan.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         DailyScrollPlan.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         DailyScrollPlan.setBounds(0, 30, WIDTH, HEIGHT);
-        
-        
+
         //set the layout for the all tasks panel
-        CalanderView.setLayout(new GridLayout(numberoftasks,1));
+        CalanderView.setLayout(new GridLayout(NumberoftodayTasks, 1));
         CalanderView.setBackground(Color.decode(MAINBGCOLOR));
-        JScrollPane CalanderPlan = new JScrollPane(CalanderView);
-        CalanderPlan.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        CalanderPlan.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        CalanderPlan.setBounds(0, 30, WIDTH, HEIGHT);
-        
+        JScrollPane CalanderScrollPlan = new JScrollPane(CalanderView);
+        CalanderScrollPlan.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        CalanderScrollPlan.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        CalanderScrollPlan.setBounds(300, 30, WIDTH, HEIGHT);
+
         //create panel to handle selecting of what place we wish to navigate too
         JPanel NavigationPanel = new JPanel();
-        NavigationPanel.setLayout(new GridLayout(1,2));
+        NavigationPanel.setLayout(new GridLayout(1, 2));
         NavigationPanel.setBounds(0, 0, WIDTH, 30);
-        NavigationPanel.setBackground(Color.decode(MAINBGCOLOR));
+        NavigationPanel.setBackground(Color.decode(HEADERCOLOR));
         //Navigation Panel will have two buttons
         JButton Dailyselector = new JButton("Daily Veiw");
         JButton Calenderselector = new JButton("All Tasks");
         //add the buttons to the navigation bar
         NavigationPanel.add(Dailyselector);
         NavigationPanel.add(Calenderselector);
-        
+
         //give the buttons actions
+        //due to the nature of jpanel we need to move panels away 
+        //and move them back to render them
+        //correctly
         Dailyselector.addActionListener((java.awt.event.ActionEvent evt) -> {
             //show daily, hide calander
+            DailyScrollPlan.setBounds(0, 30, WIDTH, HEIGHT);
             DailyTaskPanel.setVisible(true);
+            CalanderScrollPlan.setBounds(900, 30, WIDTH, HEIGHT);
             CalanderView.setVisible(false);
         });
         Calenderselector.addActionListener((java.awt.event.ActionEvent evt) -> {
             //show daily, hide calander
+            DailyScrollPlan.setBounds(900, 30, WIDTH, HEIGHT);
             DailyTaskPanel.setVisible(false);
+            CalanderScrollPlan.setBounds(0, 30, WIDTH, HEIGHT);
             CalanderView.setVisible(true);
         });
 
-        
-        
+        DailyTaskPanel.setVisible(true);
+        CalanderView.setVisible(false);
         //set up the main window
-        
+
         // add the pannels
         this.add(DailyScrollPlan);
+        this.add(CalanderScrollPlan);
         this.add(NavigationPanel);
-        
+
         //pack and set size
         this.pack();
         this.setResizable(false);
-        
-        this.setBounds(0,0,WIDTH+6, HEIGHT+58);
+
+        this.setBounds(0, 0, WIDTH + 6, HEIGHT + 58);
         this.setLocationRelativeTo(null);
         this.setTitle("Daily Tasks");
-        
+
     }
-    
-    
-    
-    private void AddTasksToDaily(){
-                
+
+    private void AddTasksToCalander() {
+
+        tasks = control.getallTasks(1);
+
+        //formatter for date strings
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
+
+        for (Task item : tasks) {
+
+            //build the buttons text. remove ID later
+            String status = item.getCompletion() ? "Done" : "ToDo";
+     
+            JButton butt = new JButton(
+                    status + "         "
+                    + "ID: (" + item.getID() + ")        "
+                    + item.getTitle() + "         "
+                    + "Due Date: (" + item.getDueDate().format(formatter) + ")"
+            );
+            butt.setBackground(Color.decode(BUTTONCOLOR));
+            butt.setFocusPainted(false);
+            butt.setContentAreaFilled(true);
+            CalanderView.add(butt);
+            NumberoftodayTasks++;
+        }
+
+    }
+
+    private void AddTasksToDaily() {
+
         //make a list of all tasks
         //make a list of buttons to assing later
         tasks = control.getallTasks(1);
-        
+
+        LocalDate today = LocalDate.now();
+
         //formatter for date strings
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
-        
-        for (Task item : tasks)  {
-            //build the buttons text. remove ID later
-            JButton butt = new JButton( 
-                    "ID: (" +item.getID()+ ")        " + 
-                    item.getTitle()+ "         " +
-                    "Due Date: (" + item.getDueDate().format(formatter) + ")" 
-                    );
-            butt.setBackground(Color.decode(BUTTONCOLOR));  
-            butt.setFocusPainted(false);
-            butt.setContentAreaFilled(true);
-            DailyTaskPanel.add(butt);
-            System.out.println("" + 
-                item.getID() + " " + 
-                item.getTitle() + " " + 
-                item.getDueDate() + " " + 
-                item.getCompletion() + " " + 
-                item.getOwnerId() + " " + 
-                item.getDesc()
+
+        for (Task item : tasks) {
+
+            if (today == item.getDueDate()) {
+                //build the buttons text. remove ID later
+                JButton butt = new JButton(
+                        "ID: (" + item.getID() + ")        "
+                        + item.getTitle() + "         "
+                        + "Due Date: (" + item.getDueDate().format(formatter) + ")"
                 );
-            numberoftasks++;
-        } 
-        
-        
+                butt.setBackground(Color.decode(BUTTONCOLOR));
+                butt.setFocusPainted(false);
+                butt.setContentAreaFilled(true);
+                DailyTaskPanel.add(butt);
+                NumberoftodayTasks++;
+            }
+
+        }
+
     }
-    
-    
 
     /**
      * This method is called from within the constructor to initialize the form.
