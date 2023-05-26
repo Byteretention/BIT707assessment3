@@ -10,7 +10,6 @@ import java.awt.GridLayout;
 import java.awt.Label;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import javax.swing.border.Border;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -29,8 +28,8 @@ import javax.swing.SwingConstants;
  */
 public class DailyTasks extends javax.swing.JFrame {
 
+    Boolean windowcreated = false;
     ToDoController control;
-    List<Task> tasks;
     String url = "C://sqlite/db/ToDo.db";
 
     //window style settings.
@@ -41,25 +40,11 @@ public class DailyTasks extends javax.swing.JFrame {
     String MAINBGCOLOR = "#FFFFFF";
     String BUTTONCOLOR = "#EEEEEE";
     String HEADERCOLOR = "#4527A0";
-
-    int NumberoftodayTasks;
-    int NumberofallTasks;
-
-    //our Panels for this screen
-    JPanel DailyTaskPanel;
-    JPanel CalanderView;
-
-    //Our scrollers, we need to remove and remake them each upate
-    JScrollPane dailyScroll;
-    JScrollPane calanderScroll;
-    //current hidden status of each panel
-    boolean dailyshown = true;
-    boolean calandershown = false;
-
-    //globals for the task edit plane.
-    boolean taskEditOpen = false;
-    int EXPANDEDWIDTH = 900;
     JPanel EditPanel;
+    JPanel DailyVeiw;
+    JPanel CalanderVeiw;
+    boolean EditorActive = false;
+    int activemenu = 1;
 
     //jank date syste
     //max number of dates per month
@@ -97,246 +82,162 @@ public class DailyTasks extends javax.swing.JFrame {
         } catch (Exception e) {
             System.out.println("Failed to connect to : " + url);
         }
-
-        //crate our panels
-        createDaily();
-        createCalander();
-        createNavi();
-        //dumby, will be deleted
+        this.setLayout(null);
+        //create navigation bar
+        JPanel Navi = createNavi();
+        DailyVeiw = DailyVeiw();
+        DailyVeiw.setBounds(0, 30, WIDTH, HEIGHT);
+        CalanderVeiw = CalanderVeiw();
+        CalanderVeiw.setBounds(9000, 9000, WIDTH, HEIGHT);
         EditPanel = new JPanel();
 
-        //hide and show the default pannels
-        DailyTaskPanel.setVisible(dailyshown);
-        CalanderView.setVisible(calandershown);
+        this.add(Navi);
+        this.add(DailyVeiw);
+        this.add(CalanderVeiw);
 
         //pack and set size
         this.pack();
         this.setResizable(false);
-        this.setBounds(0, 0, WIDTH + 6, HEIGHT + 58);
+        this.setSize(WIDTH + 6, HEIGHT + 58);
         this.setLocationRelativeTo(null);
         this.setTitle("Daily Tasks");
 
     }
 
     private void updatePanels() {
-        //this is to redraw the screen.
-        //we need to remove the old panels and then remake them
-        this.remove(dailyScroll);
-        this.remove(calanderScroll);
-        //recreate the old Panels
-        //crate our panels
-        createDaily();
-        createCalander();
-        //hide and show the default pannels
-        DailyTaskPanel.setVisible(dailyshown);
-        CalanderView.setVisible(calandershown);
-
-        if (taskEditOpen) {
-            this.setBounds(0, 0, EXPANDEDWIDTH + 6, HEIGHT + 58);
+        this.remove(DailyVeiw);
+        this.remove(CalanderVeiw);
+        if (EditorActive) {
+            this.setSize(WIDTH + 6 + 485, HEIGHT + 58);
         } else {
-            this.setBounds(0, 0, WIDTH + 6, HEIGHT + 58);
+            this.setSize(WIDTH + 6, HEIGHT + 58);
         }
-        this.setLocationRelativeTo(null);
+        DailyVeiw = DailyVeiw();
+        CalanderVeiw = CalanderVeiw();
+        if (activemenu == 1) {
+            DailyVeiw.setBounds(0, 30, WIDTH, HEIGHT);
+            CalanderVeiw.setBounds(9000, 9000, WIDTH, HEIGHT);
+        } else if (activemenu == 2) {
+            DailyVeiw.setBounds(9000, 9000, WIDTH, HEIGHT);
+            CalanderVeiw.setBounds(0, 30, WIDTH, HEIGHT);
+        }
 
-        this.revalidate();
+        this.add(DailyVeiw);
+        this.add(CalanderVeiw);
+        this.validate();
         this.repaint();
     }
 
-    //we need to recreate the calander pannel each time we update it
-    //return the scrollPane cause we need to edit it later
-    private void createCalander() {
-        WIDTH = 415;
-        HEIGHT = 500;
+    public JPanel TaskPanel(Task item) {
+        //create the Panel
+        JPanel taskpannel = new JPanel(new GridLayout(1, 2));
+        taskpannel.setBackground(Color.decode(MAINBGCOLOR));
+        //build the buttons text. remove ID later
+        String status = item.getCompletion() ? "Done" : "ToDo";
 
-        //create the pannel
-        //we dont need to delete the old one cause jvm garbage collect should delete it
-        CalanderView = new JPanel();
-        //create all the buttons and add them to the JPanel
-        AddTasksToCalander();
-
-        //set the layout for the panel
-        //set the layout for the all tasks panel
-        CalanderView.setLayout(new GridLayout(NumberofallTasks, 1));
-        CalanderView.setBackground(Color.decode(MAINBGCOLOR));
-        JScrollPane CalanderScrollPlan = new JScrollPane(CalanderView);
-        CalanderScrollPlan.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        CalanderScrollPlan.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-
-        //if we are ment to be showing this panel, have it onscreen 0, 0
-        //otherwise put it off screen
-        int x = 0;
-        int y = 30;
-        if (!calandershown) {
-            x = 9000;
-            y = 9000;
-        }
-        CalanderScrollPlan.setBounds(x, y, WIDTH, HEIGHT);
-        //add the panel to the form
-        this.add(CalanderScrollPlan);
-        this.calanderScroll = CalanderScrollPlan;
-
-    }
-
-    private void AddTasksToCalander() {
-
-        tasks = control.getallTasks(1);
-        NumberofallTasks = 0;
-
-        //formatter for date strings
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
-
-        for (Task item : tasks) {
-            //panel to hold our row for task informaiton
-            JPanel itempannel = new JPanel();
-            itempannel.setLayout(null);
-            itempannel.setBackground(Color.decode(MAINBGCOLOR));
-
-            //build the buttons text. remove ID later
-            String status = item.getCompletion() ? "Done" : "ToDo";
-
-            //format title to prevent it from being too long
-            String snippedtitle = item.getTitle();
-            snippedtitle = snippedtitle + "                                                 ";
-            if (snippedtitle.length() >= 17) {
-                snippedtitle = snippedtitle.substring(0, 15);
-                if (snippedtitle.endsWith(" ")) {
-                    snippedtitle = snippedtitle + "     ";
-                } else {
-                    snippedtitle = snippedtitle + "...";
-                }
+        //format title to prevent it from being too long
+        String snippedtitle = item.getTitle();
+        snippedtitle = snippedtitle + "                                                 ";
+        if (snippedtitle.length() >= 17) {
+            snippedtitle = snippedtitle.substring(0, 15);
+            if (snippedtitle.endsWith(" ")) {
+                snippedtitle = snippedtitle + "     ";
+            } else {
+                snippedtitle = snippedtitle + "...";
             }
-
-            //create the button to go on the left
-            String buttontext
-                    = status + "         "
-                    + snippedtitle;
-
-            JButton butt = new JButton(
-                    buttontext
-            );
-
-            butt.setBackground(Color.decode(BUTTONCOLOR));
-            butt.setFocusPainted(false);
-            butt.setContentAreaFilled(true);
-            butt.setHorizontalAlignment(SwingConstants.LEFT);
-            butt.setBounds(0, 0, WIDTH - 150, 35);
-
-            //add action to button to allow us to open a edit panel if we select a task
-            butt.addActionListener((java.awt.event.ActionEvent evt) -> {
-                createEditor(item);
-            });
-
-            //create the label to go on the right
-            Label dueDate = new Label("Due Date: (" + item.getDueDate().format(formatter) + ")");
-            dueDate.setBounds(WIDTH - 150 + 3, 0, WIDTH - 80, 35);
-
-            itempannel.add(butt);
-            itempannel.add(dueDate);
-            CalanderView.add(itempannel);
-            NumberofallTasks++;
         }
 
-    }
+        //create the button to go on the left
+        String buttontext
+                = status + "         "
+                + snippedtitle;
 
-    //create the Daily Panel
-    //return scroll panel cause we need to edit it later
-    private void createDaily() {
-        WIDTH = 415;
-        HEIGHT = 500;
-        //
-        DailyTaskPanel = new JPanel();
+        JButton butt = new JButton(buttontext);
 
-        //update buttons
-        AddTasksToDaily();
+        butt.setBackground(Color.decode(BUTTONCOLOR));
+        butt.setFocusPainted(false);
+        butt.setContentAreaFilled(true);
+        butt.setHorizontalAlignment(SwingConstants.LEFT);
+        butt.setBounds(0, 0, WIDTH - 150, 35);
 
-        //set the layout for the daily panel
-        DailyTaskPanel.setLayout(new GridLayout(NumberoftodayTasks, 1));
-        DailyTaskPanel.setBackground(Color.decode(MAINBGCOLOR));
-        JScrollPane DailyScrollPlan = new JScrollPane(DailyTaskPanel);
-        DailyScrollPlan.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        DailyScrollPlan.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        //if we are ment to be showing this panel, have it onscreen 0, 0
-        //otherwise put it off screen
-        int x = 0;
-        int y = 30;
-        if (!dailyshown) {
-            x = 9000;
-            y = 9000;
-        }
-        DailyScrollPlan.setBounds(x, y, WIDTH, HEIGHT);
-        //add it to the panel
-        this.add(DailyScrollPlan);
-
-        //return it
-        this.dailyScroll = DailyScrollPlan;
-    }
-
-    private void AddTasksToDaily() {
-
-        //make a list of all tasks
-        //make a list of buttons to assing later
-        tasks = control.getallTasks(1);
-        NumberoftodayTasks = 0;
-
-        LocalDate today = LocalDate.now();
-
+        //add action to button to allow us to open a edit panel if we select a task
+        butt.addActionListener((java.awt.event.ActionEvent evt) -> {
+            createEditor(item);
+            updatePanels();
+        });
         //formatter for date strings
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
 
-        for (Task item : tasks) {
+        //create the label to go on the right
+        Label dueDate = new Label("Due Date: (" + item.getDueDate().format(formatter) + ")");
+        dueDate.setBounds(WIDTH - 150 + 3, 0, WIDTH - 80, 35);
+
+        taskpannel.add(butt);
+        taskpannel.add(dueDate);
+
+        return taskpannel;
+    }
+
+    private JPanel DailyVeiw() {
+        JPanel host = new JPanel();
+        //create DailyVeiw Bar
+        JPanel DailyVeiw = new JPanel();
+
+        //set DailyView Bar size and color
+        DailyVeiw.setBackground(Color.decode(MAINBGCOLOR));
+
+        //add all the tasks
+        int taskcount = 0;
+        for (Task item : control.getallTasks(1)) {
             if (LocalDate.now().equals(item.getDueDate())) {
-                //panel to hold our row for task informaiton
-                JPanel itempannel = new JPanel();
-                itempannel.setLayout(null);
-                itempannel.setBackground(Color.decode(MAINBGCOLOR));
-
-                //build the buttons text. remove ID later
-                String status = item.getCompletion() ? "Done" : "ToDo";
-
-                //format title to prevent it from being too long
-                String snippedtitle = item.getTitle();
-                snippedtitle = snippedtitle + "                                                 ";
-                if (snippedtitle.length() >= 17) {
-                    snippedtitle = snippedtitle.substring(0, 15);
-                    if (snippedtitle.endsWith(" ")) {
-                        snippedtitle = snippedtitle + "     ";
-                    } else {
-                        snippedtitle = snippedtitle + "...";
-                    }
-                }
-
-                //create the button to go on the left
-                String buttontext
-                        = status + "         "
-                        + snippedtitle;
-
-                JButton butt = new JButton(
-                        buttontext
-                );
-
-                butt.setBackground(Color.decode(BUTTONCOLOR));
-                butt.setFocusPainted(false);
-                butt.setContentAreaFilled(true);
-                butt.setHorizontalAlignment(SwingConstants.LEFT);
-                butt.setBounds(0, 0, WIDTH - 150, 35);
-
-                //add action to button to allow us to open a edit panel if we select a task
-                butt.addActionListener((java.awt.event.ActionEvent evt) -> {
-                    createEditor(item);
-                });
-
-                //create the label to go on the right
-                Label dueDate = new Label("Due Date: (" + item.getDueDate().format(formatter) + ")");
-                dueDate.setBounds(WIDTH - 150 + 3, 0, WIDTH - 80, 35);
-                
-                itempannel.add(butt);
-                itempannel.add(dueDate);
-                DailyTaskPanel.add(itempannel);
-                NumberoftodayTasks++;
+                DailyVeiw.add(TaskPanel(item));
+                taskcount++;
             }
+        }
+        //because there can be alot of tasks, set the grid layout now
+        DailyVeiw.setLayout(new GridLayout(taskcount, 1));
+
+        //scroll pane time?
+        JScrollPane scrollPane = new JScrollPane(DailyVeiw,
+                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(15);
+
+        host.setLayout(new GridLayout(1, 1));
+        host.add(scrollPane);
+
+        return host;
+    }
+
+    private JPanel CalanderVeiw() {
+        JPanel host = new JPanel();
+        //create DailyVeiw Bar
+        JPanel DailyVeiw = new JPanel();
+
+        //set DailyView Bar size and color
+        DailyVeiw.setBackground(Color.decode(MAINBGCOLOR));
+
+        //add all the tasks
+        int taskcount = 0;
+        for (Task item : control.getallTasks(1)) {
+
+            DailyVeiw.add(TaskPanel(item));
+            taskcount++;
 
         }
+        //because there can be alot of tasks, set the grid layout now
+        DailyVeiw.setLayout(new GridLayout(taskcount, 1));
 
+        //scroll pane time?
+        JScrollPane scrollPane = new JScrollPane(DailyVeiw,
+                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(15);
+
+        host.setLayout(new GridLayout(1, 1));
+        host.add(scrollPane);
+
+        return host;
     }
 
     private void createEditor(Task item) {
@@ -345,7 +246,7 @@ public class DailyTasks extends javax.swing.JFrame {
         //remove the old Panel;
         this.remove(EditPanel);
         //set flag for edit panel active to true
-        taskEditOpen = true;
+        EditorActive = true;
 
         //create the panel
         EditPanel = new JPanel();
@@ -367,7 +268,7 @@ public class DailyTasks extends javax.swing.JFrame {
         Status.addActionListener((java.awt.event.ActionEvent evt) -> {
             item.toggleCompleteion();
             Status.setText(item.getCompletion() ? "Done" : "ToDo");
-        });;
+        });
 
         //Create label for Task ID
         Label TaskID = new Label("Task ID: " + item.getID(), Label.CENTER);
@@ -404,7 +305,7 @@ public class DailyTasks extends javax.swing.JFrame {
         taskDesc.setBounds(3, 41, 479, 300);
         taskDesc.setText(item.getDesc());
         EditPanel.add(taskDesc);
-        
+
         //get date from task
         String taskdatetoedit = item.getDueDate().format(formatter);
         String[] dateparts = taskdatetoedit.split("/");
@@ -418,9 +319,6 @@ public class DailyTasks extends javax.swing.JFrame {
         JSpinner Month = new JSpinner(monthmax);
         SpinnerModel yearmax = new SpinnerNumberModel(yearint, 1996, 3030, 1);
         JSpinner Year = new JSpinner(yearmax);
-        
-        
-        
 
         Day.setBounds(3, 300 + 41 + 3, 60, 35);
         Month.setBounds(66, 300 + 41 + 3, 60, 35);
@@ -460,7 +358,7 @@ public class DailyTasks extends javax.swing.JFrame {
                     Dateoutput = Dateoutput + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
                 }
             }
-            
+
             LocalDate datetoset = LocalDate.parse(Dateoutput, formatter);
             item.setDueDate(datetoset);
 
@@ -475,7 +373,7 @@ public class DailyTasks extends javax.swing.JFrame {
         close.setBackground(Color.decode(BUTTONCOLOR));
         //make it so clicking close, closes the edit ui.
         close.addActionListener((java.awt.event.ActionEvent evt) -> {
-            taskEditOpen = false;
+            EditorActive = false;
             updatePanels();
         });
         EditPanel.add(close);
@@ -486,7 +384,7 @@ public class DailyTasks extends javax.swing.JFrame {
         updatePanels();
     }
 
-    private void createNavi() {
+    private JPanel createNavi() {
         //create panel to handle selecting of what place we wish to navigate too
         JPanel NavigationPanel = new JPanel();
         NavigationPanel.setLayout(new GridLayout(1, 2));
@@ -504,28 +402,17 @@ public class DailyTasks extends javax.swing.JFrame {
         //and move them back to render them
         //correctly
         Dailyselector.addActionListener((java.awt.event.ActionEvent evt) -> {
-
-            dailyshown = true;
-            calandershown = false;
-            //show daily, hide calander
-            dailyScroll.setBounds(0, 30, WIDTH, HEIGHT);
-            DailyTaskPanel.setVisible(dailyshown);
-            calanderScroll.setBounds(900, 30, WIDTH, HEIGHT);
-            CalanderView.setVisible(calandershown);
-            updatePanels();
+            activemenu = 1;
+            DailyVeiw.setBounds(0, 30, WIDTH, HEIGHT);
+            CalanderVeiw.setBounds(9000, 9000, WIDTH, HEIGHT);
         });
         Calenderselector.addActionListener((java.awt.event.ActionEvent evt) -> {
-            dailyshown = false;
-            calandershown = true;
-            //show daily, hide calander
-            dailyScroll.setBounds(900, 30, WIDTH, HEIGHT);
-            DailyTaskPanel.setVisible(dailyshown);
-            calanderScroll.setBounds(0, 30, WIDTH, HEIGHT);
-            CalanderView.setVisible(calandershown);
-            updatePanels();
+            activemenu = 2;
+            DailyVeiw.setBounds(9000, 9000, WIDTH, HEIGHT);
+            CalanderVeiw.setBounds(0, 30, WIDTH, HEIGHT);
         });
         // add the pannels
-        this.add(NavigationPanel);
+        return NavigationPanel;
     }
 
     /**
