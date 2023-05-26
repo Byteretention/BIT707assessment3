@@ -340,11 +340,4 @@ public class ToDoControllerTest {
 
     }
 
-    @Test
-    public void testRemoveTask() {
-    }
-
-    @Test
-    public void testCreatetask4() {
-    }
 }
