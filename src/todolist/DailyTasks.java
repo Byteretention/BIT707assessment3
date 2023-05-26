@@ -13,11 +13,13 @@ import java.time.format.DateTimeFormatter;
 import javax.swing.border.Border;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
@@ -162,7 +164,7 @@ public class DailyTasks extends javax.swing.JFrame {
 
         //add action to button to allow us to open a edit panel if we select a task
         butt.addActionListener((java.awt.event.ActionEvent evt) -> {
-            createEditor(item);
+            createEditor(item, true);
             updatePanels();
         });
         //formatter for date strings
@@ -190,8 +192,11 @@ public class DailyTasks extends javax.swing.JFrame {
         int taskcount = 0;
         for (Task item : control.getallTasks(1)) {
             if (LocalDate.now().equals(item.getDueDate())) {
-                DailyVeiw.add(TaskPanel(item));
-                taskcount++;
+                if (!item.getCompletion()) {
+                    DailyVeiw.add(TaskPanel(item));
+                    taskcount++;
+                }
+
             }
         }
         //because there can be alot of tasks, set the grid layout now
@@ -240,7 +245,10 @@ public class DailyTasks extends javax.swing.JFrame {
         return host;
     }
 
-    private void createEditor(Task item) {
+    //create a editor window
+    //, if isEdit is true we are editing a item
+    //, if isEdit is false we are createing a new item
+    private void createEditor(Task item, boolean isEdit) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
 
         //remove the old Panel;
@@ -260,54 +268,95 @@ public class DailyTasks extends javax.swing.JFrame {
         EditPanel.setBorder(blackline);
 
         //crate label for if task is done or not
-        JButton Status = new JButton(item.getCompletion() ? "Done" : "ToDo");
-        Status.setBounds(5, 5, 60, 35);
-        Status.setBackground(Color.decode(BUTTONCOLOR));
-        EditPanel.add(Status);
-        //set Button to be Toggleable between complete and not complete
-        Status.addActionListener((java.awt.event.ActionEvent evt) -> {
-            item.toggleCompleteion();
-            Status.setText(item.getCompletion() ? "Done" : "ToDo");
-        });
+        //if is edit, edit task and and display if complete
+        //if is create, display todo
+        if (isEdit) {
+            JButton Status = new JButton(item.getCompletion() ? "Done" : "ToDo");
+            Status.setBounds(5, 5, 60, 35);
+            Status.setBackground(Color.decode(BUTTONCOLOR));
+            EditPanel.add(Status);
+            //set Button to be Toggleable between complete and not complete
+            Status.addActionListener((java.awt.event.ActionEvent evt) -> {
+                item.toggleCompleteion();
+                Status.setText(item.getCompletion() ? "Done" : "ToDo");
+            });
+        } else {
+            Label Status = new Label("ToDo", Label.CENTER);
+            Status.setBounds(5, 5, 60, 35);
+            Status.setBackground(Color.decode(BUTTONCOLOR));
+            EditPanel.add(Status);
+        }
 
         //Create label for Task ID
-        Label TaskID = new Label("Task ID: " + item.getID(), Label.CENTER);
+        //if editing task, show id
+        //if creating task display "new task"
+        String taskidtext = "";
+        if (isEdit) {
+            taskidtext = "Task ID: " + item.getID();
+        } else {
+            taskidtext = "New Task";
+        }
+        Label TaskID = new Label(taskidtext, Label.CENTER);
         TaskID.setBounds(68, 5, 80, 35);
         TaskID.setBackground(Color.decode(BUTTONCOLOR));
         EditPanel.add(TaskID);
 
         //Task Title
-        String snippedtitle = item.getTitle();
-        snippedtitle = snippedtitle + "                     ";
-        if (snippedtitle.length() >= 23) {
-            snippedtitle = snippedtitle.substring(0, 21);
-            if (snippedtitle.endsWith(" ")) {
-                snippedtitle = snippedtitle + "     ";
-            } else {
-                snippedtitle = snippedtitle + "...";
+        //if editing task, show a noneditable title
+        //else make a textbox that allows the user to make a new name
+        JTextField TaskTitleeditable = new JTextField(); //this should only apper if we in new mode
+        if (isEdit) {
+            String snippedtitle = item.getTitle();
+            snippedtitle = snippedtitle + "                     ";
+            if (snippedtitle.length() >= 23) {
+                snippedtitle = snippedtitle.substring(0, 21);
+                if (snippedtitle.endsWith(" ")) {
+                    snippedtitle = snippedtitle + "     ";
+                } else {
+                    snippedtitle = snippedtitle + "...";
+                }
             }
-        }
 
-        Label TaskTitle = new Label(snippedtitle);
-        TaskTitle.setBounds(204, 5, 160, 35);
-        TaskTitle.setBackground(Color.decode(BUTTONCOLOR));
-        EditPanel.add(TaskTitle);
+            Label TaskTitle = new Label(snippedtitle);
+            TaskTitle.setBounds(204, 5, 160, 35);
+            TaskTitle.setBackground(Color.decode(BUTTONCOLOR));
+            EditPanel.add(TaskTitle);
+        } else {
+
+            TaskTitleeditable.setBounds(204, 5, 160, 35);
+            EditPanel.add(TaskTitleeditable);
+        }
 
         //owner name would go here but we dont have atable for all the owners/users so we will just display
         //owner id 
-        Label OwnerName = new Label(Integer.toString(item.getOwnerId()), Label.RIGHT);
-        OwnerName.setBounds(442, 5, 40, 35);
-        OwnerName.setBackground(Color.decode(BUTTONCOLOR));
-        EditPanel.add(OwnerName);
+        //if in edit mode show id
+        //if in create show nothing
+        if (isEdit) {
+            Label OwnerName = new Label(Integer.toString(item.getOwnerId()), Label.RIGHT);
+            OwnerName.setBounds(442, 5, 40, 35);
+            OwnerName.setBackground(Color.decode(BUTTONCOLOR));
+            EditPanel.add(OwnerName);
+        }
 
         //Task Desc
+        //if in edit mode assign existing text to box. other wise do nothing
         JTextArea taskDesc = new JTextArea();
         taskDesc.setBounds(3, 41, 479, 300);
-        taskDesc.setText(item.getDesc());
+        if (isEdit) {
+            taskDesc.setText(item.getDesc());
+        }
         EditPanel.add(taskDesc);
 
         //get date from task
-        String taskdatetoedit = item.getDueDate().format(formatter);
+        //if in edit mode, get date from task
+        //if in create, assign todays day
+        String taskdatetoedit = "";
+        if (isEdit) {
+            taskdatetoedit = item.getDueDate().format(formatter);
+        } else {
+            taskdatetoedit = LocalDate.now().format(formatter);
+        }
+
         String[] dateparts = taskdatetoedit.split("/");
         int dayint = Integer.valueOf(dateparts[0]);
         int monthint = Integer.valueOf(dateparts[1]);
@@ -329,44 +378,93 @@ public class DailyTasks extends javax.swing.JFrame {
         EditPanel.add(Year);
 
         //Button to force entry to update if client is done editing
-        JButton update = new JButton("Update Task");
-        update.setBounds(239, 492, 120, 35);
-        update.setBackground(Color.decode(BUTTONCOLOR));
-        //make it so clicking update, updates the sql database
-        update.addActionListener((java.awt.event.ActionEvent evt) -> {
-            //build the date string
-            String Dateoutput = "";
-            if ((Integer) Day.getValue() > MAXDAYS[(Integer) Month.getValue() - 1]) {
-                Dateoutput = MAXDAYS[(Integer) Month.getValue() - 1] + "/";
-                if ((Integer) Month.getValue() <= 10) {
-                    Dateoutput = Dateoutput + "0" + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
+        //if in edit mode, create update button
+        //if in create mode, create create button
+        if (isEdit) {
+            JButton update = new JButton("Update Task");
+            update.setBounds(239, 492, 120, 35);
+            update.setBackground(Color.decode(BUTTONCOLOR));
+
+            //make it so clicking update, updates the sql database
+            update.addActionListener((java.awt.event.ActionEvent evt) -> {
+                //build the date string
+                String Dateoutput = "";
+                if ((Integer) Day.getValue() > MAXDAYS[(Integer) Month.getValue() - 1]) {
+                    Dateoutput = MAXDAYS[(Integer) Month.getValue() - 1] + "/";
+                    if ((Integer) Month.getValue() <= 10) {
+                        Dateoutput = Dateoutput + "0" + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
+                    } else {
+                        Dateoutput = Dateoutput + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
+                    }
+
+                    JOptionPane.showMessageDialog(this, "Date to high for Selected month.\nAssuming Requested input should be: " + Dateoutput);
+
                 } else {
-                    Dateoutput = Dateoutput + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
+                    if ((Integer) Day.getValue() <= 10) {
+                        Dateoutput = "0" + (Integer) Day.getValue() + "/";
+                    } else {
+                        Dateoutput = (Integer) Day.getValue() + "/";
+                    }
+                    if ((Integer) Month.getValue() <= 10) {
+                        Dateoutput = Dateoutput + "0" + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
+                    } else {
+                        Dateoutput = Dateoutput + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
+                    }
                 }
 
-                JOptionPane.showMessageDialog(this, "Date to high for Selected month.\nAssuming Requested input should be: " + Dateoutput);
+                LocalDate datetoset = LocalDate.parse(Dateoutput, formatter);
+                item.setDueDate(datetoset);
 
-            } else {
-                if ((Integer) Day.getValue() <= 10) {
-                    Dateoutput = "0" + (Integer) Day.getValue() + "/";
+                item.setDesc(taskDesc.getText());
+                control.updateTask(item);
+                updatePanels();
+            });;
+            EditPanel.add(update);
+
+        } else {
+            //create button to create a new task and publish it to database
+            System.out.println("create button");
+            JButton create = new JButton("Create Task");
+            create.setBounds(239, 492, 120, 35);
+            create.setBackground(Color.decode(BUTTONCOLOR));
+            create.addActionListener((java.awt.event.ActionEvent evt) -> {
+                //if the task name is null just refuse to do anything and error
+                if (TaskTitleeditable.getText().equals("")) {
+                    JOptionPane.showMessageDialog(this, "You have not entered a task title\nPlease enter a title");
                 } else {
-                    Dateoutput = (Integer) Day.getValue() + "/";
-                }
-                if ((Integer) Month.getValue() <= 10) {
-                    Dateoutput = Dateoutput + "0" + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
-                } else {
-                    Dateoutput = Dateoutput + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
-                }
-            }
+                    //build the date string
+                    String Dateoutput = "";
+                    if ((Integer) Day.getValue() > MAXDAYS[(Integer) Month.getValue() - 1]) {
+                        Dateoutput = MAXDAYS[(Integer) Month.getValue() - 1] + "/";
+                        if ((Integer) Month.getValue() <= 10) {
+                            Dateoutput = Dateoutput + "0" + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
+                        } else {
+                            Dateoutput = Dateoutput + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
+                        }
 
-            LocalDate datetoset = LocalDate.parse(Dateoutput, formatter);
-            item.setDueDate(datetoset);
+                        JOptionPane.showMessageDialog(this, "Date to high for Selected month.\nAssuming Requested input should be: " + Dateoutput);
 
-            item.setDesc(taskDesc.getText());
-            control.updateTask(item);
-            updatePanels();
-        });;
-        EditPanel.add(update);
+                    } else {
+                        if ((Integer) Day.getValue() <= 10) {
+                            Dateoutput = "0" + (Integer) Day.getValue() + "/";
+                        } else {
+                            Dateoutput = (Integer) Day.getValue() + "/";
+                        }
+                        if ((Integer) Month.getValue() <= 10) {
+                            Dateoutput = Dateoutput + "0" + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
+                        } else {
+                            Dateoutput = Dateoutput + (Integer) Month.getValue() + "/" + (Integer) Year.getValue();
+                        }
+                    }
+
+                    LocalDate datetoset = LocalDate.parse(Dateoutput, formatter);
+                    //for now all owners will be owner id 1 since we dont have a owner class
+                    control.createTask(datetoset, 1, TaskTitleeditable.getText(), taskDesc.getText());
+                    updatePanels();
+                }
+            });
+            EditPanel.add(create);
+        }
         //button to close edit menu if they do not wish to keep editing
         JButton close = new JButton("Canel");
         close.setBounds(362, 492, 120, 35);
@@ -377,6 +475,20 @@ public class DailyTasks extends javax.swing.JFrame {
             updatePanels();
         });
         EditPanel.add(close);
+
+        //add a delete button if in edit mode
+        if (isEdit) {
+            JButton Delele = new JButton("Delete");
+            Delele.setBounds(116, 492, 120, 35);
+            Delele.setBackground(Color.decode(BUTTONCOLOR));
+            //make it so clicking close, closes the edit ui.
+            Delele.addActionListener((java.awt.event.ActionEvent evt) -> {
+                control.removeTask(item.getID());
+                EditorActive = false;
+                updatePanels();
+            });
+            EditPanel.add(Delele);
+        }
 
         //add the panel
         this.add(EditPanel);
@@ -411,6 +523,16 @@ public class DailyTasks extends javax.swing.JFrame {
             DailyVeiw.setBounds(9000, 9000, WIDTH, HEIGHT);
             CalanderVeiw.setBounds(0, 30, WIDTH, HEIGHT);
         });
+
+        //because at this point we have given up trying to match the UI to the design files
+        JButton CreateNewTask = new JButton("Create Task");
+        NavigationPanel.add(CreateNewTask);
+
+        //call edit task but tell it we in create task mode
+        CreateNewTask.addActionListener((java.awt.event.ActionEvent evt) -> {
+            createEditor(null, false);
+        });
+
         // add the pannels
         return NavigationPanel;
     }
