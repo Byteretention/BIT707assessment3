@@ -21,11 +21,20 @@ public class ToDoController {
     List<Task> Tasks;
     databaseConnector connection;
 
+    /**
+     *Creates the controller. make sure to call connect on it next
+     */
     public ToDoController() {
 
     }
 
     //the ui should ask the user how many days from now they wish to have the due date
+
+    /**
+     * Will return a LocalDate x number of days from now
+     * @param days, how many days from now do we want a date for 
+     * @return, returns future date
+     */
     public LocalDate GetTimeFromNow(int days) {
         LocalDate today = LocalDate.now();
         LocalDate tomorrow = today.plusDays(days);
@@ -34,6 +43,13 @@ public class ToDoController {
 
     //interface with SQL database
     //connect to database
+
+    /**
+     * Connect to the database.
+     * Throws Exception on failure to connect
+     * @param URL, address or file path to our database
+     * @param userID, user id of logged in
+     */
     public void connect(String URL, int userID) {
         connection = new databaseConnector(URL);
         try {
@@ -45,17 +61,32 @@ public class ToDoController {
     }
 
     //get all tasks
+
+    /**
+     * return all tasks owned by a user
+     * @param OwnerID, user id we wish to get all tasks for
+     * @return a List of all tasks a user owns
+     */
     public List<Task> getallTasks(int OwnerID) {
         //we can also use this to update the intrunal list of tasks
         this.Tasks = connection.getAllTasks(OwnerID);
         return Tasks;
     }
 
+    /**
+     * returns a single task as requested, we can only find tasks that a exact user owns however
+     * @param taskid, task id for task we wish to find
+     * @param OwnerID, owners id. 
+     * @return the task we are trying to get
+     */
     public Task getTask(int taskid, int OwnerID) {
         return connection.getTask(taskid, OwnerID );
     }
 
-    //update single task
+    /**
+     *update single task
+     * @param input, given this a Task class, it will get all the information from it and call the sqldatabase to update it
+     */
     public void updateTask(Task input) {
         //get task id
         int taskid = input.getID();
@@ -87,6 +118,15 @@ public class ToDoController {
 
     //controller. remember to update the sql database.
     //make sure that title is not null
+
+    /**
+     * Create a new task in the database. will findthe ID on its own.
+     * @param date, due date for the new task
+     * @param owner, owner of the new task
+     * @param title, title for the new task. will return -1 if task has no name
+     * @param desc, extra information for task
+     * @return a int with error code. -1 for no name -2 for if it fails to get ID from database
+     */
     public int createTask(LocalDate date, int owner, String title, String desc) {
         //chcek if a name is null. if it is return -1 and make the ui error out
         if (title == "") {
@@ -104,6 +144,11 @@ public class ToDoController {
         return TaskID;
     }
 
+    /**
+     * Delete a task from the database based off the ID given
+     * (unsafe)
+     * @param taskID the ID of the task we wish to remove
+     */
     public void removeTask(int taskID) {
         try {
             connection.removeItem(taskID);
@@ -115,6 +160,10 @@ public class ToDoController {
     
     
     //for testing create task 4.
+
+    /**
+     *Creates task 4 for testing
+     */
     public void createtask4() {
         connection.createtask4();
     }

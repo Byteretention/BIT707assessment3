@@ -106,6 +106,11 @@ public class DailyTasks extends javax.swing.JFrame {
 
     }
 
+    /**
+     * Calling this will update all panels on screen
+     * call it when you make any changes to the database.
+     * ensures everything stays up to date
+     */
     private void updatePanels() {
         this.remove(DailyVeiw);
         this.remove(CalanderVeiw);
@@ -130,7 +135,16 @@ public class DailyTasks extends javax.swing.JFrame {
         this.repaint();
     }
 
-    public JPanel TaskPanel(Task item) {
+    /**
+     * Will create a panel that a user can use to select a task to edit. 
+     * calling this will return a panel containing a button and a label
+     * the button will have the task status and the title for the task
+     * the label will have the due date for the task
+     * the button can be used to open the editor panel
+     * @param item, item we wish to make into a display panel
+     * @return, JPanel with selection button and label
+     */
+    private JPanel TaskPanel(Task item) {
         //create the Panel
         JPanel taskpannel = new JPanel(new GridLayout(1, 2));
         taskpannel.setBackground(Color.decode(MAINBGCOLOR));
@@ -180,6 +194,13 @@ public class DailyTasks extends javax.swing.JFrame {
         return taskpannel;
     }
 
+    /**
+     * when calling this. it will get a list of all tasks that a user owns
+     * and then check the date for them
+     * if the date is today and the task is not complete it will call TaskPanel()
+     * and create a list of tasks that need to be completed today
+     * @return returns a JPanel with a list of tasks that must be compelted today
+     */
     private JPanel DailyVeiw() {
         JPanel host = new JPanel();
         //create DailyVeiw Bar
@@ -214,7 +235,12 @@ public class DailyTasks extends javax.swing.JFrame {
         return host;
     }
 
-    private JPanel CalanderVeiw() {
+    /**
+     * when calling this. it will get a list of all tasks that a user owns
+     * and create a list of tasks that the user owns. completed or not
+     * @return JPanel containing all tasks the user owns
+     */
+    public JPanel CalanderVeiw() {
         JPanel host = new JPanel();
         //create DailyVeiw Bar
         JPanel DailyVeiw = new JPanel();
@@ -248,7 +274,14 @@ public class DailyTasks extends javax.swing.JFrame {
     //create a editor window
     //, if isEdit is true we are editing a item
     //, if isEdit is false we are createing a new item
-    private void createEditor(Task item, boolean isEdit) {
+
+    /**
+     * Call this to create a panel for ether creating a new task or editing a existing one
+     * if creating a task will provide different buttons and editable feilds then if editing a task
+     * @param item, if we are creating a task. provide null. if you are editing a task provide the task to edit
+     * @param isEdit, if false the function will assume you are creating a task, if true it will assume you are editing a task
+     */
+    public void createEditor(Task item, boolean isEdit) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
 
         //remove the old Panel;
@@ -496,7 +529,13 @@ public class DailyTasks extends javax.swing.JFrame {
         updatePanels();
     }
 
-    private JPanel createNavi() {
+    /**
+     * Will return a JPanel containing a navigation bar for the UI
+     * this bar will allow user to atemp to create a task
+     * or switch between daily view and all tasks view.
+     * @return JPanel with navigation bar
+     */
+    public JPanel createNavi() {
         //create panel to handle selecting of what place we wish to navigate too
         JPanel NavigationPanel = new JPanel();
         NavigationPanel.setLayout(new GridLayout(1, 2));

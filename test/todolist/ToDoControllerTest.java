@@ -23,9 +23,18 @@ public class ToDoControllerTest {
     //connect to testing database
     String url = "C://sqlite/db/ToDotesting.db";
 
+    //create test object, does nothing
+
+    /**
+     *Create controller test. does nothing
+     */
     public ToDoControllerTest() {
     }
 
+    /**
+     * Set up for the test. runs on start of test.
+     * @throws Exception if can not connect to database
+     */
     @BeforeClass
     public static void setUpClass() throws Exception {
         System.out.println("Set Up\n~~");

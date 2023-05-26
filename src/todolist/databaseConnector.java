@@ -18,7 +18,11 @@ import java.util.List;
 public class databaseConnector {
 
     String ConnectionURL;
-
+    
+    /**
+     * creates the DB connector, you will need to call this.connect() before doing anything
+     * @param url (the url or file path to our database)
+     */
     public databaseConnector(String url) {
         this.ConnectionURL = url;
     }
@@ -45,6 +49,10 @@ public class databaseConnector {
         return conn;
     }
 
+    /**
+     *Run after creating the object. will attemp to connect to the database
+     * Throws Exception when it can not connect
+     */
     public void testConnect() {
         try {
             Connection conn = this.connect();
@@ -57,6 +65,14 @@ public class databaseConnector {
         }
     }
 
+    /**
+     * Update a given task in the database
+     * @param taskID, ID of the task we are looking for
+     * @param date, Date of the task we wish to update to
+     * @param ownerID, owner ID we wish to update to if we plan to change it
+     * @param taskStatus, for us to change if the task is complete or not
+     * @param taskDesc, extra information for the task
+     */
     public void updateTask(int taskID, LocalDate date, int ownerID, int taskStatus, String taskDesc) {
         //create a formater to convert date time to string
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
@@ -79,6 +95,12 @@ public class databaseConnector {
         }
     }
 
+    /**
+     * Find a task in the database
+     * @param taskID, task id we are looking for
+     * @param OwnerID, owner id (if the owner does not own that task, it will not return even if a task exists for that id)
+     * @return Task based of id and owner id
+     */
     public Task getTask(int taskID, int OwnerID) {
 
         String sqlQuery = "SELECT taskNumber, dueDate, ownderID, taskStatus, taskName, taskDesc From Task Where taskNumber = ? AND ?";
@@ -128,6 +150,12 @@ public class databaseConnector {
     }
 
     //get all tasks from the database
+
+    /**
+     * return all tasks own by user
+     * @param OwnerID, Owner ID we want to get all tasks for
+     * @return List of all tasks base off user id
+     */
     public List<Task> getAllTasks(int OwnerID) {
 
         List<Task> tasks = new ArrayList<Task>();
@@ -170,6 +198,14 @@ public class databaseConnector {
         return tasks;
     }
 
+    /**
+     * Add a new task to the database
+     * @param TaskID, taskID, will most likely be ignored but controller still needs to find correct id
+     * @param title, Title, the tasks title, make sure you dont give a null string
+     * @param date, Date, this will be converted to a string as SQLite does not handle date time
+     * @param owner, Owners ID
+     * @param desc, extra information about the task
+     */
     public void insertTask(int TaskID, String title, LocalDate date, int owner, String desc) {
         //create a formater to convert date time to string
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
@@ -196,6 +232,12 @@ public class databaseConnector {
     }
 
     //remove a entry from the Db
+
+    /**
+     * Deletes a task from the database based off its ID
+     * (unsafe)
+     * @param TaskID Id of task we wish to remove from database
+     */
     public void removeItem(int TaskID) {
 
         //our Query
@@ -215,6 +257,12 @@ public class databaseConnector {
     }
 
     //get next id from sql database. we will use this to create ids in task objects
+
+    /**
+     * will return the next free to use ID in the database
+     * use this to create a new task to make sure you find a free ID
+     * @return, next free ID
+     */
     public int getNextID() {
 
         //our Query
@@ -233,6 +281,10 @@ public class databaseConnector {
     }
 
     //this only exists to allow for testing
+
+    /**
+     * Purely used during testing. Junit test requires task with ID of 4 to exist
+     */
     public void createtask4() {
         LocalDate date = LocalDate.now();
         //create a formater to convert date time to string
