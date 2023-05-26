@@ -160,7 +160,7 @@ public class databaseConnector {
 
         List<Task> tasks = new ArrayList<Task>();
 
-        String sqlQuery = "SELECT taskNumber, dueDate, ownderID, taskStatus, taskName, taskDesc From Task WHERE ownderID = " + Integer.toString(OwnerID);
+        String sqlQuery = "SELECT taskNumber, dueDate, ownderID, taskStatus, taskName, taskDesc From Task WHERE ownderID = " + Integer.toString(OwnerID) + " ORDER BY dueDate";
         //formatter to make the string for date back into LocalDate
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
         //try to connect to db and get list of tasks
