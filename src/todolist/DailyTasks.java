@@ -35,11 +35,19 @@ public class DailyTasks extends javax.swing.JFrame {
     String HEADERCOLOR = "#4527A0";
 
     int NumberoftodayTasks;
+    int NumberofallTasks;
 
     //our Panels for this screen
     JPanel DailyTaskPanel;
     JPanel CalanderView;
-
+    
+    //Our scrollers, we need to remove and remake them each upate
+    JScrollPane dailyScroll;
+    JScrollPane calanderScroll;
+    //current hidden status of each panel
+    boolean dailyshown = true;
+    boolean calandershown = false;
+    
     /**
      * Creates new form DailyTasks
      */
@@ -61,7 +69,7 @@ public class DailyTasks extends javax.swing.JFrame {
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(DailyTasks.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-
+        
         initComponents();
 
         //create controller and connect to database
@@ -73,83 +81,83 @@ public class DailyTasks extends javax.swing.JFrame {
         }
 
         //crate our panels
-        DailyTaskPanel = new JPanel();
-        CalanderView = new JPanel();
+        createDaily();
+        createCalander();
+        createNavi();
 
-        //update buttons
-        AddTasksToDaily();
-        AddTasksToCalander();
+        //hide and show the default pannels
+        DailyTaskPanel.setVisible(dailyshown);
+        CalanderView.setVisible(calandershown);
 
-        //set up a scroll plane for the buttons
-        //set the layout for the daily panel
-        DailyTaskPanel.setLayout(new GridLayout(NumberoftodayTasks, 1));
-        DailyTaskPanel.setBackground(Color.decode(MAINBGCOLOR));
-        JScrollPane DailyScrollPlan = new JScrollPane(DailyTaskPanel);
-        DailyScrollPlan.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        DailyScrollPlan.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        DailyScrollPlan.setBounds(0, 30, WIDTH, HEIGHT);
-
-        //set the layout for the all tasks panel
-        CalanderView.setLayout(new GridLayout(NumberoftodayTasks, 1));
-        CalanderView.setBackground(Color.decode(MAINBGCOLOR));
-        JScrollPane CalanderScrollPlan = new JScrollPane(CalanderView);
-        CalanderScrollPlan.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        CalanderScrollPlan.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        CalanderScrollPlan.setBounds(300, 30, WIDTH, HEIGHT);
-
-        //create panel to handle selecting of what place we wish to navigate too
-        JPanel NavigationPanel = new JPanel();
-        NavigationPanel.setLayout(new GridLayout(1, 2));
-        NavigationPanel.setBounds(0, 0, WIDTH, 30);
-        NavigationPanel.setBackground(Color.decode(HEADERCOLOR));
-        //Navigation Panel will have two buttons
-        JButton Dailyselector = new JButton("Daily Veiw");
-        JButton Calenderselector = new JButton("All Tasks");
-        //add the buttons to the navigation bar
-        NavigationPanel.add(Dailyselector);
-        NavigationPanel.add(Calenderselector);
-
-        //give the buttons actions
-        //due to the nature of jpanel we need to move panels away 
-        //and move them back to render them
-        //correctly
-        Dailyselector.addActionListener((java.awt.event.ActionEvent evt) -> {
-            //show daily, hide calander
-            DailyScrollPlan.setBounds(0, 30, WIDTH, HEIGHT);
-            DailyTaskPanel.setVisible(true);
-            CalanderScrollPlan.setBounds(900, 30, WIDTH, HEIGHT);
-            CalanderView.setVisible(false);
-        });
-        Calenderselector.addActionListener((java.awt.event.ActionEvent evt) -> {
-            //show daily, hide calander
-            DailyScrollPlan.setBounds(900, 30, WIDTH, HEIGHT);
-            DailyTaskPanel.setVisible(false);
-            CalanderScrollPlan.setBounds(0, 30, WIDTH, HEIGHT);
-            CalanderView.setVisible(true);
-        });
-
-        DailyTaskPanel.setVisible(true);
-        CalanderView.setVisible(false);
-        //set up the main window
-
-        // add the pannels
-        this.add(DailyScrollPlan);
-        this.add(CalanderScrollPlan);
-        this.add(NavigationPanel);
-
+  
         //pack and set size
         this.pack();
         this.setResizable(false);
-
         this.setBounds(0, 0, WIDTH + 6, HEIGHT + 58);
         this.setLocationRelativeTo(null);
         this.setTitle("Daily Tasks");
 
     }
+    
+    
+    private void updatePanels(){
+        //this is to redraw the screen.
+        //we need to remove the old panels and then remake them
+        this.remove(dailyScroll);
+        this.remove(calanderScroll);
+        //recreate the old Panels
+        //crate our panels
+        createDaily();
+        createCalander();
+        //hide and show the default pannels
+        DailyTaskPanel.setVisible(dailyshown);
+        CalanderView.setVisible(calandershown);
+        
+        this.revalidate();
+        this.repaint();
+    }
+    
+    //we need to recreate the calander pannel each time we update it
+    //return the scrollPane cause we need to edit it later
+    private void createCalander(){
+        WIDTH = 415;
+        HEIGHT = 500;
+              
+        //create the pannel
+        //we dont need to delete the old one cause jvm garbage collect should delete it
+        CalanderView = new JPanel();
+        //create all the buttons and add them to the JPanel
+        AddTasksToCalander();
+        
+        //set the layout for the panel
+        //set the layout for the all tasks panel
+        CalanderView.setLayout(new GridLayout(NumberofallTasks, 1));
+        CalanderView.setBackground(Color.decode(MAINBGCOLOR));
+        JScrollPane CalanderScrollPlan = new JScrollPane(CalanderView);
+        CalanderScrollPlan.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        CalanderScrollPlan.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        
+        //if we are ment to be showing this panel, have it onscreen 0, 0
+        //otherwise put it off screen
+        int x = 0;
+        int y = 30;
+        if(!calandershown){
+            x = 9000;
+            y = 9000;
+        }
+        CalanderScrollPlan.setBounds(x, y, WIDTH, HEIGHT);
+        //add the panel to the form
+        this.add(CalanderScrollPlan);
+        this.calanderScroll = CalanderScrollPlan;
+        
+        
+        
+    }
 
     private void AddTasksToCalander() {
 
         tasks = control.getallTasks(1);
+        NumberofallTasks = 0;
 
         //formatter for date strings
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/MM/yyyy");
@@ -169,16 +177,52 @@ public class DailyTasks extends javax.swing.JFrame {
             butt.setFocusPainted(false);
             butt.setContentAreaFilled(true);
             CalanderView.add(butt);
-            NumberoftodayTasks++;
+            NumberofallTasks++;
         }
 
     }
+    
+    //create the Daily Panel
+    //return scroll panel cause we need to edit it later
+    private void createDaily(){
+        WIDTH = 415;
+        HEIGHT = 500;
+        //
+        DailyTaskPanel = new JPanel();
+        
+        //update buttons
+        AddTasksToDaily();
+
+        //set the layout for the daily panel
+        DailyTaskPanel.setLayout(new GridLayout(NumberoftodayTasks, 1));
+        DailyTaskPanel.setBackground(Color.decode(MAINBGCOLOR));
+        JScrollPane DailyScrollPlan = new JScrollPane(DailyTaskPanel);
+        DailyScrollPlan.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        DailyScrollPlan.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        //if we are ment to be showing this panel, have it onscreen 0, 0
+        //otherwise put it off screen
+        int x = 0;
+        int y = 30;
+        if(!dailyshown){
+            x = 9000;
+            y = 9000;
+        }
+        DailyScrollPlan.setBounds(x, y, WIDTH, HEIGHT);
+        //add it to the panel
+        this.add(DailyScrollPlan);
+        
+        //return it
+        this.dailyScroll = DailyScrollPlan;    
+    }
+    
+    
 
     private void AddTasksToDaily() {
 
         //make a list of all tasks
         //make a list of buttons to assing later
         tasks = control.getallTasks(1);
+        NumberoftodayTasks = 0;
 
         LocalDate today = LocalDate.now();
 
@@ -204,6 +248,63 @@ public class DailyTasks extends javax.swing.JFrame {
         }
 
     }
+    
+    
+        
+    private void createNavi(){
+                        //create panel to handle selecting of what place we wish to navigate too
+        JPanel NavigationPanel = new JPanel();
+        NavigationPanel.setLayout(new GridLayout(1, 2));
+        NavigationPanel.setBounds(0, 0, WIDTH, 30);
+        NavigationPanel.setBackground(Color.decode(HEADERCOLOR));
+        //Navigation Panel will have two buttons
+        JButton Dailyselector = new JButton("Daily Veiw");
+        JButton Calenderselector = new JButton("All Tasks");
+        //add the buttons to the navigation bar
+        NavigationPanel.add(Dailyselector);
+        NavigationPanel.add(Calenderselector);
+
+        //give the buttons actions
+        //due to the nature of jpanel we need to move panels away 
+        //and move them back to render them
+        //correctly
+        Dailyselector.addActionListener((java.awt.event.ActionEvent evt) -> {
+            
+            dailyshown = true;
+            calandershown = false;
+            //show daily, hide calander
+            dailyScroll.setBounds(0, 30, WIDTH, HEIGHT);
+            DailyTaskPanel.setVisible(dailyshown);
+            calanderScroll.setBounds(900, 30, WIDTH, HEIGHT);
+            CalanderView.setVisible(calandershown);
+        });
+        Calenderselector.addActionListener((java.awt.event.ActionEvent evt) -> {
+            dailyshown = false;
+            calandershown = true;
+            //show daily, hide calander
+            dailyScroll.setBounds(900, 30, WIDTH, HEIGHT);
+            DailyTaskPanel.setVisible(dailyshown);
+            calanderScroll.setBounds(0, 30, WIDTH, HEIGHT);
+            CalanderView.setVisible(calandershown);
+        });
+        
+        
+        
+        //test update button
+        JButton refresh = new JButton("Refresh");
+        refresh.addActionListener((java.awt.event.ActionEvent evt) -> {
+            updatePanels();
+        });
+        NavigationPanel.add(refresh);
+        
+        
+        
+        // add the pannels
+        this.add(NavigationPanel);
+    }
+    
+    
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
